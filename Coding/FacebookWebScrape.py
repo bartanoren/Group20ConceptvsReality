@@ -14,13 +14,14 @@ import time
 import datetime
 import traceback
 import logging
+import unicodedata
 
 
 import urllib.request
 import os
 
 developmentMode = 1
-EXPLICIT_WAIT_TIME = 30 #seconds
+EXPLICIT_WAIT_TIME = 10 #seconds
 DISPLAY_RATIO = 4/3 #4:3
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = SCREEN_WIDTH / DISPLAY_RATIO
@@ -40,6 +41,7 @@ def main():
     chrome_options = Options()
 
     chrome_options.add_experimental_option("detach", True)
+    # chrome_options.add_argument("--headless")
 
     #start the driver
     driver = webdriver.Chrome(ChromeDriverManager().install() ,options=chrome_options)#service=Service(driverPath)), options = options)
@@ -76,10 +78,13 @@ def main():
     not_now_btn.click()
 
     #Reject saving info for safety purposes
-    not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "//button[text()='Not Now']")))
-    not_now_btn.click()
+    # try:
+    #     not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+    #         EC.presence_of_element_located(
+    #             (By.XPATH, "//button[text()='Not Now']")))
+    #     not_now_btn.click()
+    # finally:
+    #     pass
 
     #Go to the account page
     #TODO: try to make more robust
@@ -138,7 +143,7 @@ def main():
         EC.presence_of_all_elements_located((By.XPATH,
         "//div[@class = '_aabd _aa8k _aanf']")))
 
-        #iterate over all triple pics (TODO: only last posted  3 right now)
+        #iterate over all triple pics (TODO: only last posted 3 pictures right now)
         i = 0
         for post in triple_pic_divs:
 
@@ -162,12 +167,14 @@ def main():
         #add the posts to the dictionary
         posts.update({url : current_user_posts})
 
-    #close the web tab
-    driver.close()
+    #close the web tab TODO: remove
+    # driver.close()
+    # printdev(("driver closed"))
     
     #download all images in the dictionary
+    printdev(("downloading photos"))
     for triplet in posts:
-        download_list(posts[triplet])
+        process_list(posts[triplet], driver)
 
     #TODO: implement differently later
     #reset image reference nr to 1
@@ -176,78 +183,50 @@ def main():
 
 
 
-    #TODO: uncomment
-
-    # for i in range(3):
-    #     articles = get_post(driver)
-    #     if articles == []:
-    #         time.sleep(2)
-    #         articles = get_post(driver)
-            
-    #     #store pictures TODO: pictures need to be stored with poster ID(sometype)
-    #     picture_links = []
-    #     for post in articles:
-    #         try:
-    #             picture_link = post.find_element(By.XPATH, ".//div[@class='_aatk']//img").get_attribute("src")
-    #             printdev(("picture is: ", picture_link))
-    #             download_image(picture_link)
-
-    #             href = post.find_element(By.XPATH, ".//a").get_attribute("href")
-    #             printdev(("href:  ", href))
-
-    #             if (picture_link, href) not in picture_links:
-    #                 picture_links.append((picture_link, href))
-    #             else:
-    #                 printdev(("Tuple already processed"))
-    #         except:
-    #             printdev(("Something Went wrong"))
-    #         finally:
-    #             printdev(("Try ended"))
-    #             pass
-
-    #     #scroll to the last picture that was processed
-    #     actions = ActionChains(driver)
-    #     actions.move_to_element(articles[len(articles)-1]).perform()
-    #     printdev(("scroll completed"))
-
-    #     time.sleep(2)
-
-
-#downloads all the pictures in a list and saves the instagram url
+#downloads all the pictures in a list and saves the instagram url to txt file
 #list item format = (image source url, image instagram url)
-def download_list(list):
+def process_list(list, driver):
     global image_reference_dict
     global image_reference_nr
 
     for post in list:
-        image_reference_dict.update({image_reference_nr : post[1]})
+        #TODO: idk if line below is necessary
+        # image_reference_dict.update({image_reference_nr : post[1]})
         download_image(post[0], image_reference_nr)
+        get_post_description(driver, post[1], image_reference_nr)
         image_reference_nr += 1
-        
+
+#uses the driver and visits the url of the post to get the description of the post
+def get_post_description(driver, url, image_name):
+    driver.get(url)
+
+    try:
+        description_span = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+            EC.presence_of_element_located((By.XPATH,
+            "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div[1]/div[1]/article/div/div[2]/div/div[2]/div[1]/ul/div/li/div/div/div[2]/div[1]/span")))
+        description = description_span.text
+    except:
+        description = ""
+
+    save_description(image_name, description, url)
 
 
-    
-def download_image(url, image_name):
-
+def save_description(file_name, description, post_url):
     dir_path = os.path.dirname(os.path.realpath(__file__))
+    full_path = dir_path + "/posts"
+    description_clean = unicodedata.normalize('NFKD', description).encode('ascii', 'ignore').decode('utf-8')
+    description_clean = description_clean.replace("\n", "")
+    with open(full_path +"/" + str(file_name) + ".txt", "w") as file:
+        file.write(description_clean + "\n" + post_url)
+    
 
+
+#downloads the image in the given url and names it image_name
+def download_image(url, image_name):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
     full_path = dir_path + "\posts\\" + str(image_name) + ".jpg"
     urllib.request.urlretrieve(url, full_path)
     
-
-
-def get_post(driver):
-    #Gather posts
-    #First get the div that contains all posts by class id
-    post_div = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
-    EC.presence_of_all_elements_located((By.XPATH, "//div[@class = '_ab8w  _ab94 _ab99 _ab9f _ab9m _ab9p  _abc0 _abcm']//article")))
-    printdev(("post_div:  ", post_div))
-
-    # #get all articles with posts
-    # articles = post_div.find_elements(By.XPATH, ".//article")
-    # printdev("articles:  ", articles)
-
-    return post_div
 
 #printing function which disables with development mode bool
 def printdev(tuple):
