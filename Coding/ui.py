@@ -3,15 +3,21 @@ import os
 import sys
 import time
 import random
+
+import requests
+from io import BytesIO
+import zipfile
+
 # import RPi.GPIO as GPIO
 from pygame.locals import *
+
 
 pygame.init()
 # GPIO.setmode(GPIO.BOARD)
 running = True
 
 # Config constants
-folderpath = "/home/stijn/projects/Group20ConceptvsReality/Coding/Posts/"
+folderpath = os.path.dirname(os.path.realpath(__file__)) + "/Posts"
 WIDTH = 600
 HEIGHT = 1024
 waitTime = 3 # time in seconds that an image is shown
@@ -25,25 +31,25 @@ defaultColour = (255,255,255)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
 
+def get_posts():
+    # Get the zip file from the server
+    url = "http://localhost:5000" #needs to be the servers IP
+    response = requests.get(url)
+    zip_file = BytesIO(response.content)
+
+    # Extract the contents of the zip file to a directory
+    extract_path = os.path.dirname(os.path.realpath(__file__)) + "/Posts"
+    with zipfile.ZipFile(zip_file) as archive:
+        archive.extractall(extract_path)
+
+get_posts()
+
 # Write initial folder state
 filenames = os.listdir(folderpath)
 images = []
-texts = []
 for filename in filenames:
-    if filename.endswith(".txt"):
-        texts.append(filename)
     if filename.endswith(".jpg"):
         images.append(filename)
-
-# Write dummy history so that later we can update the history more easily
-picNum = random.randint(0, len(images) - 1)
-imgHistory = [images[picNum]]
-picNum = random.randint(0, len(images) - 1)
-imgHistory.append(images[picNum])
-picNum = random.randint(0, len(images) - 1)
-imgHistory.append(images[picNum])
-picNum = random.randint(0, len(images) - 1)
-imgHistory.append(images[picNum])
 
 # Text writing prep
 def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
@@ -52,6 +58,8 @@ def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
     screen.blit(text, ( x, y ) )
 
 print("Starting loop")
+
+current_image_iteration = 0
 
 # Main display loop
 while running:
@@ -67,25 +75,19 @@ while running:
     if newFilenames != filenames:
         filenames = newFilenames
         images = []
-        texts = []
         for filename in filenames:
-            if filename.endswith(".txt"):
-                texts.append(filename)
             if filename.endswith(".jpg"):
                 images.append(filename)
+        
+        current_image_iteration = 0
 
     # Pick a picture from the list and display that
     #TODO: Then also take the text and write it over top
 
-    # Make sure images aren't repeated too quickly
-    noNewImg = True
-    while noNewImg:
-        picNum = random.randint(0, len(images) - 1)
-        if imgHistory.count(images[picNum]) == 0:
-            del imgHistory[0]
-            imgHistory.append(images[picNum])
-            img = pygame.image.load(folderpath + images[picNum])
-            noNewImg = False
+    img = pygame.image.load(folderpath + images[current_image_iteration])
+    with open(folderpath + images[current_image_iteration], 'r') as file:
+        txt = file.readline().strip('\n')
+    current_image_iteration += 1
 
     screen.fill((0,0,0)) # Clear background
     # Scale and write pictures to screen
@@ -118,3 +120,6 @@ while running:
     #         timer = waitTime
     #     time.sleep(0.5)
     #     timer += 0.5
+
+    
+
