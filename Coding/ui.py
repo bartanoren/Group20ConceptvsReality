@@ -33,7 +33,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
 
 def get_posts():
     # Get the zip file from the server
-    url = "http://localhost:5000" #needs to be the servers IP
+    url = "http://131.155.185.252:5000" #needs to be the servers IP
     response = requests.get(url)
     zip_file = BytesIO(response.content)
 
