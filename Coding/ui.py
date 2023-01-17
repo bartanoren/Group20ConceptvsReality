@@ -27,8 +27,20 @@ defaultColour = (255,255,255)
 # nextPin = 
 # likePin = 
 # modePin = 
-# powerPin = 
+# powerPin = 5 # Special pin that can start Pi from halted state
 
+# Connect grounded pins to pull up resistor keeps them HIGH until pressed
+# GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(powerPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# Button presses will be detected in the background:
+# GPIO.add_event_detect(prevPin, GPIO.RISING)
+# GPIO.add_event_detect(nextPin, GPIO.RISING)
+# GPIO.add_event_detect(likePin, GPIO.RISING)
+# GPIO.add_event_detect(modePin, GPIO.RISING)
+# GPIO.add_event_detect(powerPin, GPIO.RISING)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
 
 def get_posts():
@@ -50,11 +62,11 @@ images = []
 for filename in filenames:
     if filename.endswith(".jpg"):
         images.append(filename)
-
+https://howchoo.com/g/mwnlytk3zmm/how-to-add-a-power-button-to-your-raspberry-pi
 # Text writing prep
 def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
     global screen
-    text = font.render( msg, True, color, (0, 0, 0, 255))
+    text = font.render( msg, True, color, (0, 0, 0))
     screen.blit(text, ( x, y ) )
 
 print("Starting loop")
@@ -78,7 +90,7 @@ while running:
         for filename in filenames:
             if filename.endswith(".jpg"):
                 images.append(filename)
-        
+        images = random.shuffle(images)
         current_image_iteration = 0
 
     # Pick a picture from the list and display that
@@ -88,6 +100,8 @@ while running:
     with open(folderpath + images[current_image_iteration][:-4] +  ".txt", 'r') as file:
         txt = file.readline().strip('\n')
     current_image_iteration += 1
+    if current_image_iteration == len(images) + 1:
+        current_image_iteration = 0
 
     screen.fill((0,0,0)) # Clear background
     # Scale and write pictures to screen
@@ -121,11 +135,33 @@ while running:
         timer += 0.5
 
     # Wait loop when using buttons
-    # while timer < waitTime:
-    #     if prevPushed:
-    #         # Show previous picture
-    #         timer = 0
-    #     elif nextPushed:
-    #         timer = waitTime
-    #     time.sleep(0.5)
-    #     timer += 0.5
+    while timer < waitTime:
+        if GPIO.event_detected(prevPin):
+            # Show previous picture
+            current_image_iteration -= 1
+            if current_image_iteration == -1:
+                current_image_iteration = len(images)
+            timer = 0
+        elif GPIO.event_detected(nextPin):
+            current_image_iteration += 1
+            if current_image_iteration == len(images) + 1:
+                current_image_iteration = 0
+            timer = waitTime
+        elif GPIO.event_detected(likePin):
+            # Do the liking thing
+            # Add current picture to a separate "liked" folder
+            # Send liked image's text to server
+            # Include the liked folder in image sources
+            print("Picture liked")
+        elif GPIO.event_detected(modePin):
+            # Do the mode thing: speed change or text/no text
+            print("Changing mode")
+        elif GPIO.event_detected(powerPin):
+            print("Attempting system shutdown")
+            running = False
+            timer = waitTime
+            os.system("shutdown -h now")
+            pygame.quit()
+            sys.exit()
+        time.sleep(0.5)
+        timer += 0.5
