@@ -17,7 +17,7 @@ pygame.init()
 running = True
 
 # Config constants
-folderpath = os.path.dirname(os.path.realpath(__file__)) + "/Posts"
+folderpath = os.path.dirname(os.path.realpath(__file__)) + "/Posts/"
 WIDTH = 600
 HEIGHT = 1024
 waitTime = 3 # time in seconds that an image is shown
@@ -33,7 +33,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
 
 def get_posts():
     # Get the zip file from the server
-    url = "http://131.155.185.252:5000" #needs to be the servers IP
+    url = "http://172.20.10.12:5000" #needs to be the servers IP
     response = requests.get(url)
     zip_file = BytesIO(response.content)
 
@@ -42,7 +42,7 @@ def get_posts():
     with zipfile.ZipFile(zip_file) as archive:
         archive.extractall(extract_path)
 
-get_posts()
+#get_posts()
 
 # Write initial folder state
 filenames = os.listdir(folderpath)
@@ -54,7 +54,7 @@ for filename in filenames:
 # Text writing prep
 def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
     global screen
-    text = font.render( msg, True, color, (0, 0, 0))
+    text = font.render( msg, True, color, (0, 0, 0, 255))
     screen.blit(text, ( x, y ) )
 
 print("Starting loop")
@@ -85,7 +85,7 @@ while running:
     #TODO: Then also take the text and write it over top
 
     img = pygame.image.load(folderpath + images[current_image_iteration])
-    with open(folderpath + images[current_image_iteration], 'r') as file:
+    with open(folderpath + images[current_image_iteration][:-4] +  ".txt", 'r') as file:
         txt = file.readline().strip('\n')
     current_image_iteration += 1
 
@@ -103,15 +103,24 @@ while running:
         img = pygame.transform.smoothscale(img, (WIDTH, imgHeight))
         ypos = round(HEIGHT/2 - imgHeight/2)
         screen.blit(img, (0, ypos))
-
-    show_text('SocialFrame', 20, 35)
+    
+    show_text(txt, 35, 900)
     pygame.display.flip()
     
+    timer = 0
     # Use sleep for testing without buttons
-    time.sleep(waitTime)
+    while timer < waitTime:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print("Attempting exit")
+                running = False
+                timer = waitTime
+                pygame.quit()
+                sys.exit()
+        time.sleep(0.5)
+        timer += 0.5
 
     # Wait loop when using buttons
-    # timer = 0
     # while timer < waitTime:
     #     if prevPushed:
     #         # Show previous picture
@@ -120,6 +129,3 @@ while running:
     #         timer = waitTime
     #     time.sleep(0.5)
     #     timer += 0.5
-
-    
-
