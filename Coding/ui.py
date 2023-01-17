@@ -42,7 +42,7 @@ defaultColour = (255,255,255)
 # GPIO.add_event_detect(modePin, GPIO.RISING)
 # GPIO.add_event_detect(powerPin, GPIO.RISING)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
-url =  "http://131.155.185.252:5000" #needs to be the servers IP
+url =  "http://131.155.184.82:5000" #needs to be the servers IP
 
 def send_like(url, txt_path):
     upload_url = url + '/upload'
