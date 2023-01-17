@@ -167,6 +167,8 @@ def main():
         #add the posts to the dictionary
         posts.update({url : current_user_posts})
 
+    
+
     #close the web tab TODO: remove
     # driver.close()
     # printdev(("driver closed"))
@@ -176,10 +178,12 @@ def main():
     for triplet in posts:
         process_list(posts[triplet], driver)
 
-    #TODO: implement differently later
     #reset image reference nr to 1
     global image_reference_nr
     image_reference_nr = 1
+
+    #TODO: remove
+    like_post(driver, "https://www.instagram.com/p/CnaVvn4s0Qi/")
 
 
 
@@ -227,6 +231,16 @@ def download_image(url, image_name):
     full_path = dir_path + "\posts\\" + str(image_name) + ".jpg"
     urllib.request.urlretrieve(url, full_path)
     
+def like_post(driver, url):
+    driver.get(url)
+
+    #get the picture on link
+    picture_div = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+        EC.presence_of_element_located(
+        (By.XPATH, "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div[1]/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button/div[2]/span")))
+    
+    picture_div.click()
+
 
 #printing function which disables with development mode bool
 def printdev(tuple):

@@ -42,10 +42,20 @@ defaultColour = (255,255,255)
 # GPIO.add_event_detect(modePin, GPIO.RISING)
 # GPIO.add_event_detect(powerPin, GPIO.RISING)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
+url =  "http://131.155.185.252:5000" #needs to be the servers IP
 
-def get_posts():
+def send_like(url, txt_path):
+    upload_url = url + '/upload'
+
+    file = {'file': open(txt_path, 'rb')}
+    response = requests.post(url, files=file)
+
+    print(response.text)
+
+    
+
+def get_posts(url):
     # Get the zip file from the server
-    url = "http://172.20.10.12:5000" #needs to be the servers IP
     response = requests.get(url)
     zip_file = BytesIO(response.content)
 
@@ -54,7 +64,7 @@ def get_posts():
     with zipfile.ZipFile(zip_file) as archive:
         archive.extractall(extract_path)
 
-#get_posts()
+get_posts(url)
 
 # Write initial folder state
 filenames = os.listdir(folderpath)

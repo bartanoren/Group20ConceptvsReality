@@ -1,8 +1,11 @@
 import zipfile
 import pathlib
 
-from flask import Flask, make_response
+from flask import Flask, make_response, request
 import os
+
+import random
+import string
 
 app = Flask(__name__)
 
@@ -25,6 +28,33 @@ def download_file():
     response.headers["Content-type"] = "application/zip"
     return response
 
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    dir_path = os.path.dirname(os.path.realpath(__file__)) + "/Likes/"
+
+    file = request.files['file']
+
+    if file:
+
+        # filename = ''.join(random.choices(string.ascii_letters + string.digits,
+        #     k=8)) + file.filename
+        # file.save(dir_path, filename)
+
+        file_contents = file.stream.read()
+        file_contents_str = file_contents.decode('utf-8')
+        file_contents_str_lines = file_contents_str.split("\n")
+        print(file_contents_str_lines[1])
+
+        txt_name = ''.join(random.choices(string.ascii_letters + string.digits, k=8))+'.txt'
+        with open(dir_path+txt_name, 'a') as file:
+            file.write(file_contents_str_lines[1])
+
+
+        return 'File: uploaded successfully'
+    else:
+        return 'No file was uploaded'
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
 
