@@ -78,20 +78,16 @@ def main():
     not_now_btn.click()
 
     #Reject saving info for safety purposes
-    # try:
-    #     not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
-    #         EC.presence_of_element_located(
-    #             (By.XPATH, "//button[text()='Not Now']")))
-    #     not_now_btn.click()
-    # finally:
-    #     pass
+    try:
+        not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[text()='Not Now']")))
+        not_now_btn.click()
+    except Exception:
+        printdev(('2nd popup exception'))
+   
 
     #Go to the account page
-    #TODO: try to make more robust
-    # profile_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
-    #     EC.presence_of_element_located((By.XPATH,
-    #      "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[1]/div/div/div/div/div[2]/div[8]")))
-    
     profile_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
         EC.presence_of_element_located((By.XPATH,
          "//div[@class='x1n2onr6']")))
@@ -108,6 +104,7 @@ def main():
         EC.presence_of_element_located((By.XPATH,
          "//div[@class= '_aano']")))
     
+    #scroll following list
     vertical_ordinate = 100
     for i in range(10):
         print(vertical_ordinate)
@@ -115,6 +112,7 @@ def main():
         vertical_ordinate += 250
         time.sleep(0.4)
     
+    #get the div with all following people
     following_list = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
         EC.presence_of_all_elements_located((By.XPATH,
         "//div[@class = '_ab8w  _ab94 _ab97 _ab9f _ab9k _ab9p  _ab9- _aba8 _abcm']")))
@@ -146,12 +144,6 @@ def main():
         #iterate over all triple pics (TODO: only last posted 3 pictures right now)
         i = 0
         for post in triple_pic_divs:
-
-            # triplet_elements = []
-            # triplet_elements.append(triplet.find_element(".//div[@class= '_aabd _aa8k _aanf'][1]"))
-            # triplet_elements.append(triplet.find_element(".//div[@class= '_aabd _aa8k _aanf'][2]"))
-            # triplet_elements.append(triplet.find_element(".//div[@class= '_aabd _aa8k _aanf'][3]"))
-
             # for post in triplet_elements:
             #get the source of the image
             pic_source = post.find_element(By.XPATH, ".//img").get_attribute("src")
@@ -162,24 +154,21 @@ def main():
             i += 1
             if i == 3:
                 break
-            #break #TODO: remove to look at all posts by the user
         
         #add the posts to the dictionary
         posts.update({url : current_user_posts})
 
-    #close the web tab TODO: remove
-    # driver.close()
-    # printdev(("driver closed"))
     
     #download all images in the dictionary
     printdev(("downloading photos"))
     for triplet in posts:
         process_list(posts[triplet], driver)
 
-    #TODO: implement differently later
     #reset image reference nr to 1
     global image_reference_nr
     image_reference_nr = 1
+
+    
 
 
 
@@ -227,6 +216,18 @@ def download_image(url, image_name):
     full_path = dir_path + "\posts\\" + str(image_name) + ".jpg"
     urllib.request.urlretrieve(url, full_path)
     
+def like_post(driver, url):
+    driver.get(url)
+
+    #get the picture on link
+    picture_div = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+        EC.presence_of_element_located(
+        (By.XPATH, "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div[1]/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button/div[2]/span")))
+    
+    time.sleep(1)
+
+    picture_div.click()
+
 
 #printing function which disables with development mode bool
 def printdev(tuple):
