@@ -72,7 +72,7 @@ images = []
 for filename in filenames:
     if filename.endswith(".jpg"):
         images.append(filename)
-https://howchoo.com/g/mwnlytk3zmm/how-to-add-a-power-button-to-your-raspberry-pi
+
 # Text writing prep
 def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
     global screen
