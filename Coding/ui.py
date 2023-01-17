@@ -100,7 +100,7 @@ while running:
     with open(folderpath + images[current_image_iteration][:-4] +  ".txt", 'r') as file:
         txt = file.readline().strip('\n')
     current_image_iteration += 1
-    if current_image_iteration == len(images) + 1:
+    if current_image_iteration == len(images):
         current_image_iteration = 0
 
     screen.fill((0,0,0)) # Clear background
@@ -140,11 +140,11 @@ while running:
             # Show previous picture
             current_image_iteration -= 1
             if current_image_iteration == -1:
-                current_image_iteration = len(images)
+                current_image_iteration = len(images) - 1
             timer = 0
         elif GPIO.event_detected(nextPin):
             current_image_iteration += 1
-            if current_image_iteration == len(images) + 1:
+            if current_image_iteration == len(images):
                 current_image_iteration = 0
             timer = waitTime
         elif GPIO.event_detected(likePin):
