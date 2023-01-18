@@ -28,23 +28,25 @@ SCREEN_HEIGHT = SCREEN_WIDTH / DISPLAY_RATIO
 image_reference_dict = {}
 image_reference_nr = 1
 
+directory = os.path.dirname(os.path.realpath(__file__))
+# __user_name = "iotScrapeTest@gmail.com" #TODO: testing stuff
+# __password = "sadsadsad"
+
+__user_name = None
+__password = None
+
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
+# chrome_options.add_argument("--headless")
+
+driver = webdriver.Chrome(ChromeDriverManager().install() ,options=chrome_options)#service=Service(driverPath)), options = options)
+    
+
 def main():
-    # #Virtual display for chromium to work
-    # display = Display(visible=developmentMode, size=(SCREEN_WIDTH, SCREEN_HEIGHT))
-    # display.start()
+    
 
-    # options = Options()
-    # #specify browser is chromium instead of chrome
-    # options.BinaryLocation = "/usr/bin/chromium-browser"
-    # #using custom chromedriver for raspi
-    # driverPath = "/usr/bin/chromedriver"
-    chrome_options = Options()
-
-    chrome_options.add_experimental_option("detach", True)
-    # chrome_options.add_argument("--headless")
-
-    #start the driver
-    driver = webdriver.Chrome(ChromeDriverManager().install() ,options=chrome_options)#service=Service(driverPath)), options = options)
+    #start the scraping
+    global driver
     driver.get("https://www.instagram.com/")
     printdev(('Instagram'))
 
@@ -57,8 +59,8 @@ def main():
 
 
     #Login sequence
-    __user_name = "iotScrapeTest@gmail.com"
-    __password = "sadsadsad"
+    global __user_name
+    global __password
 
     username_input = driver.find_element(By.NAME, "username")
     username_input.clear()
@@ -228,11 +230,55 @@ def like_post(driver, url):
 
     picture_div.click()
 
-
 #printing function which disables with development mode bool
 def printdev(tuple):
     if developmentMode:
         print(tuple)
 
-main()
 
+#wait for user information before starting the scraping sequence
+while __user_name is None: 
+    if os.path.exists(directory + '/User_Info/userfile.txt'):
+        printdev(("user info received"))
+        with open(directory + '/User_Info/userfile.txt', "r") as file:
+            content = file.readlines()
+            __user_name = content[0]
+            __password = content[1]
+    else:
+        printdev(("no user info found"))
+
+    #check every 2 seconds
+    time.sleep(2)
+
+#start the main loop
+while True:
+    #scraping
+    main()
+
+    #after scraping
+    time_limit = 300 #repeat scraping every X seconds
+    start = time.perf_counter()
+
+    #start the off scraping loop
+    while True:
+        #TODO: check the pictures that need to be liked and like them
+
+        if os.listdir(directory + "/likes"):
+            for item in os.listdir(directory + "/likes"):                
+                if item.endswith(".txt"):
+                    file_path = os.path.join(directory + "/likes/", item )
+                    #get the url from the file and initiate like sequence
+                    with open (file_path, "r") as file:
+                        url = file.read()
+                        like_post(driver, url)
+                    #delete file after like
+                    os.remove(file_path)
+
+        end = time.perf_counter()
+        if end - start > time_limit:
+            printdev(("time limit has exceeded, starting scraping"))
+            break
+
+    #delete all cookies so scraping can start with logging in
+    driver.delete_all_cookies()
+    

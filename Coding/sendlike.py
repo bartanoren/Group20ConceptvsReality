@@ -2,7 +2,7 @@ import requests
 import os
 
 
-url =  "http://131.155.184.82:5000" #needs to be the servers IP
+url =  "http://localhost:5000" #needs to be the servers IP
 url = url + '/upload'
 
 txt_path = os.path.dirname(os.path.realpath(__file__)) + "/Posts/1.txt"
