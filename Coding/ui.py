@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import random
+import io
 
 import requests
 from io import BytesIO
@@ -48,7 +49,19 @@ def send_like(url, txt_path):
     upload_url = url + '/upload'
 
     file = {'file': open(txt_path, 'rb')}
-    response = requests.post(url, files=file)
+    response = requests.post(upload_url, files=file)
+
+    print(response.text)
+
+def send_user_info(url, username, password):
+    upload_url = url+ '/upload/userinfo'
+
+    file = io.StringIO()
+    file.write(username+'\n')
+    file.write(password)
+    file.seek(0)
+    
+    response = requests.post(upload_url, files={'file': file})
 
     print(response.text)
 

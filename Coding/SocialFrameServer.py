@@ -50,10 +50,24 @@ def upload_file():
             file.write(file_contents_str_lines[1])
 
 
-        return 'File: uploaded successfully'
+        return 'File uploaded successfully'
     else:
         return 'No file was uploaded'
 
+@app.route('/upload/userinfo', methods=['POST'])
+def upload_user_info():
+    file = request.files['file']
+    content = file.read().decode()
+
+    dir_path = os.path.dirname(os.path.realpath(__file__)) + "/User_Info"
+
+    try:
+        with open(dir_path+"/userfile.txt", "w") as output_file:
+            output_file.write(content)
+    except Exception as e:
+        return f"An error occured: {e}"
+    
+    return content
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
