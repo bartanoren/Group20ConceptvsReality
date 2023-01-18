@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import random
-
+import shutil
 import requests
 from io import BytesIO
 import zipfile
@@ -23,10 +23,10 @@ HEIGHT = 1024
 waitTime = 3 # time in seconds that an image is shown
 font = pygame.font.SysFont(None, 25)
 defaultColour = (255,255,255)
-# prevPin = 
-# nextPin = 
-# likePin = 
-# modePin = 
+# prevPin = 15
+# nextPin = 28
+# likePin = 21
+# modePin = 12
 # powerPin = 5 # Special pin that can start Pi from halted state
 
 # Connect grounded pins to pull up resistor keeps them HIGH until pressed
@@ -107,8 +107,12 @@ while running:
     #TODO: Then also take the text and write it over top
 
     img = pygame.image.load(folderpath + images[current_image_iteration])
-    with open(folderpath + images[current_image_iteration][:-4] +  ".txt", 'r') as file:
-        txt = file.readline().strip('\n')
+    try:
+        with open(folderpath + images[current_image_iteration][:-4] +  ".txt", 'r') as file:
+            txt = file.readline().strip('\n')
+    except:
+        print("Loading text file failed")
+        txt = ""
     current_image_iteration += 1
     if current_image_iteration == len(images):
         current_image_iteration = 0
@@ -162,6 +166,12 @@ while running:
             # Add current picture to a separate "liked" folder
             # Send liked image's text to server
             # Include the liked folder in image sources
+            timenow = str(floor(time.time()))
+            shutil.copy(folderpath + images[current_image_iteration], folderpath + "like" + timenow + ".jpg")
+            try:
+                shutil.copy(folderpath + images[current_image_iteration][:-4] + ".txt", folderpath + "like" + timenow + ".txt")
+            except FileNotFoundError:
+                print("Text file for liked picture not found")
             print("Picture liked")
         elif GPIO.event_detected(modePin):
             # Do the mode thing: speed change or text/no text
