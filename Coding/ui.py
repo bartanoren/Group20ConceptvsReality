@@ -55,20 +55,38 @@ print(pygame.display.list_modes())
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 
 inputText = ""
+doubleInput = False
 def consumer(text):
     global inputText
-    inputText = text
+    if doubleInput:
+        doubleInput = False
+    else:
+        inputText.append(text[-1])
     print(text)
 
 keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
 keyboard = VKeyboard(screen, consumer, keyLayout)
 
 enterButton = Button(
-    screen, 200, 300, 200, 200, text='Enter',
+    screen, 200, 300, 200, 150, text='Enter',
     fontSize=50, margin=20,
     inactiveColour=(255, 0, 0),
     pressedColour=(0, 255, 0), radius=20,
-    onClick=lambda: enterPress
+    onClick=lambda enterPress: True
+)
+
+def setDefaultInfo():
+    global username
+    username = "iotScrapeTest@gmail.com"
+    global password
+    password = "sadsadsad"
+
+skipButton = Button(
+    screen, 200, 550, 150, 150, text='Skip',
+    fontSize=50, margin=20,
+    inactiveColour=(255, 150, 150),
+    pressedColour=(0, 255, 0), radius=20,
+    onClick=setDefaultInfo
 )
 
 url =  "http://10.30.40.122:5000" #needs to be the servers IP
@@ -170,10 +188,13 @@ while setupActive:
             pygame.quit()
             sys.exit()
         keyboard.on_event(event)
+
     
     screen.fill((0,0,0))
     enterButton.listen(events)
     enterButton.draw()
+    skipButton.listen(events)
+    skipButton.draw()
     renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
 
     keyboard.draw(screen)
