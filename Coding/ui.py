@@ -37,7 +37,7 @@ GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(powerPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#GPIO.setup(powerPin, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Not necessary since apparently there is a physical pull up resistor
 # Button presses will be detected in the background:
 GPIO.add_event_detect(prevPin, GPIO.RISING)
 GPIO.add_event_detect(nextPin, GPIO.RISING)
@@ -97,6 +97,40 @@ def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
     text = font.render( msg, True, color, (0, 0, 0))
     screen.blit(text, ( x, y ) )
 
+def renderTextCenteredAt(text, font, colour, y, x=WIDTH/2, screen=screen, allowed_width=WIDTH-20):
+    # first, split the text into words
+    words = text.split()
+
+    # now, construct lines out of these words
+    lines = []
+    while len(words) > 0:
+        # get as many words as will fit within allowed_width
+        line_words = []
+        while len(words) > 0:
+            line_words.append(words.pop(0))
+            fw, fh = font.size(' '.join(line_words + words[:1]))
+            if fw > allowed_width:
+                break
+
+        # add a line consisting of those words
+        line = ' '.join(line_words)
+        lines.append(line)
+
+    # now we've split our text into lines that fit into the width, actually
+    # render them
+
+    # we'll render each line below the last, so we need to keep track of
+    # the cumulative height of the lines we've rendered so far
+    y_offset = 0
+    for line in lines:
+        fw, fh = font.size(line)
+
+        # (tx, ty) is the top-left of the font surface
+        tx = x - fw / 2
+        ty = y + y_offset
+
+        font_surface = font.render(line, True, colour, (0,0,0))
+        screen.blit(font_surface, (tx, ty))
 print("Starting loop")
 
 current_image_iteration = 0
@@ -149,6 +183,7 @@ while running:
         ypos = round(HEIGHT/2 - imgHeight/2)
         screen.blit(img, (0, ypos))
     
+    renderTextCenteredAt(txt, font, defaultColour, 900)
     show_text(txt, 35, 900)
     pygame.display.flip()
     
