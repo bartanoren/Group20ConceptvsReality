@@ -39,7 +39,7 @@ GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#GPIO.setup(powerPin, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Not necessary since apparently there is a physical pull up resistor
+GPIO.setup(powerPin, GPIO.IN,) # No pullup assignment necessary since apparently there is a physical pull up resistor
 # Button presses will be detected in the background:
 GPIO.add_event_detect(prevPin, GPIO.RISING)
 GPIO.add_event_detect(nextPin, GPIO.RISING)
