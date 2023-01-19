@@ -58,6 +58,7 @@ inputText = ""
 doubleInput = False
 def consumer(text):
     global inputText
+    global doubleInput
     if doubleInput:
         doubleInput = False
     else:
