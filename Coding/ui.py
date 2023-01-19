@@ -24,6 +24,7 @@ folderpath = os.path.dirname(os.path.realpath(__file__)) + "/Posts/"
 WIDTH = 600
 HEIGHT = 1024
 waitTime = 3 # time in seconds that an image is shown
+clockMode = False
 font = pygame.font.SysFont(None, 25)
 defaultColour = (255,255,255)
 prevPin = 15
@@ -226,6 +227,7 @@ while running:
             print("Picture liked")
         elif GPIO.event_detected(modePin):
             # Do the mode thing: speed change or text/no text
+            clockMode = not clockMode
             print("Changing mode")
         elif GPIO.event_detected(powerPin):
             print("Attempting system shutdown")
@@ -234,5 +236,8 @@ while running:
 #             os.system("shutdown -h now")
             pygame.quit()
             sys.exit()
+
+        if clockMode:
+            show_text(time.strftime("%H:%M:%S"), 380, 100)
         time.sleep(0.5)
         timer += 0.5
