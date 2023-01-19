@@ -2,18 +2,19 @@ import pygame
 import os
 import sys
 import time
+import math
 import random
 import shutil
 import requests
 from io import BytesIO
 import zipfile
 
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 from pygame.locals import *
 
 
 pygame.init()
-# GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BOARD)
 running = True
 
 # Config constants
@@ -23,25 +24,28 @@ HEIGHT = 1024
 waitTime = 3 # time in seconds that an image is shown
 font = pygame.font.SysFont(None, 25)
 defaultColour = (255,255,255)
-# prevPin = 15
-# nextPin = 28
-# likePin = 21
-# modePin = 12
-# powerPin = 5 # Special pin that can start Pi from halted state
+prevPin = 15
+nextPin = 29
+likePin = 21
+modePin = 12
+powerPin = 5 # Special pin that can start Pi from halted state
 
 # Connect grounded pins to pull up resistor keeps them HIGH until pressed
-# GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(powerPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(powerPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 # Button presses will be detected in the background:
-# GPIO.add_event_detect(prevPin, GPIO.RISING)
-# GPIO.add_event_detect(nextPin, GPIO.RISING)
-# GPIO.add_event_detect(likePin, GPIO.RISING)
-# GPIO.add_event_detect(modePin, GPIO.RISING)
-# GPIO.add_event_detect(powerPin, GPIO.RISING)
-screen = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
+GPIO.add_event_detect(prevPin, GPIO.RISING)
+GPIO.add_event_detect(nextPin, GPIO.RISING)
+GPIO.add_event_detect(likePin, GPIO.RISING)
+GPIO.add_event_detect(modePin, GPIO.RISING)
+GPIO.add_event_detect(powerPin, GPIO.RISING)
+
+print(pygame.display.list_modes())
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+
 url =  "http://131.155.184.82:5000" #needs to be the servers IP
 
 def send_like(url, txt_path):
@@ -64,7 +68,7 @@ def get_posts(url):
     with zipfile.ZipFile(zip_file) as archive:
         archive.extractall(extract_path)
 
-get_posts(url)
+# get_posts(url)
 
 # Write initial folder state
 filenames = os.listdir(folderpath)
@@ -100,11 +104,10 @@ while running:
         for filename in filenames:
             if filename.endswith(".jpg"):
                 images.append(filename)
-        images = random.shuffle(images)
+        random.shuffle(images)
         current_image_iteration = 0
 
     # Pick a picture from the list and display that
-    #TODO: Then also take the text and write it over top
 
     img = pygame.image.load(folderpath + images[current_image_iteration])
     try:
@@ -137,36 +140,35 @@ while running:
     
     timer = 0
     # Use sleep for testing without buttons
-    while timer < waitTime:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                print("Attempting exit")
-                running = False
-                timer = waitTime
-                pygame.quit()
-                sys.exit()
-        time.sleep(0.5)
-        timer += 0.5
+#     while timer < waitTime:
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 print("Attempting exit")
+#                 running = False
+#                 timer = waitTime
+#                 pygame.quit()
+#                 sys.exit()
+#         time.sleep(0.5)
+#         timer += 0.5
 
     # Wait loop when using buttons
     while timer < waitTime:
         if GPIO.event_detected(prevPin):
             # Show previous picture
-            current_image_iteration -= 1
+            print("Showing previous picture")
+            current_image_iteration -= 2
             if current_image_iteration == -1:
                 current_image_iteration = len(images) - 1
-            timer = 0
+            timer = waitTime
         elif GPIO.event_detected(nextPin):
-            current_image_iteration += 1
-            if current_image_iteration == len(images):
-                current_image_iteration = 0
+            print("Showing next picture")
             timer = waitTime
         elif GPIO.event_detected(likePin):
             # Do the liking thing
             # Add current picture to a separate "liked" folder
             # Send liked image's text to server
             # Include the liked folder in image sources
-            timenow = str(floor(time.time()))
+            timenow = str(math.floor(time.time()))
             shutil.copy(folderpath + images[current_image_iteration], folderpath + "like" + timenow + ".jpg")
             try:
                 shutil.copy(folderpath + images[current_image_iteration][:-4] + ".txt", folderpath + "like" + timenow + ".txt")
@@ -180,7 +182,7 @@ while running:
             print("Attempting system shutdown")
             running = False
             timer = waitTime
-            os.system("shutdown -h now")
+#             os.system("shutdown -h now")
             pygame.quit()
             sys.exit()
         time.sleep(0.5)
