@@ -62,7 +62,7 @@ def consumer(text):
     if doubleInput:
         doubleInput = False
     else:
-        inputText.append(text[-1])
+        inputText = inputText + (text[-1])
     print(text)
 
 keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
@@ -73,7 +73,7 @@ enterButton = Button(
     fontSize=50, margin=20,
     inactiveColour=(255, 0, 0),
     pressedColour=(0, 255, 0), radius=20,
-    onClick=lambda enterPress: True
+    onClick=lambda: globals().update(enterpress=True)
 )
 
 def setDefaultInfo():
