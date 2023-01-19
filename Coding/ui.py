@@ -172,7 +172,7 @@ while setupActive:
     renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
 
     keyboard.draw(screen)
-    if enterPress & inputPhase.equals("Username"):
+    if enterPress & (inputPhase == "Username"):
         enterPress = False
         inputPhase = "Password"
         username = inputText
@@ -182,6 +182,7 @@ while setupActive:
         setupActive = False
         password = inputText
         keyboard.disable()
+    
     pygame.display.flip()
 
 send_user_info(url, username, password)
