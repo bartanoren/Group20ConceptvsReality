@@ -27,7 +27,7 @@ enterPress = False
 folderpath = os.path.dirname(os.path.realpath(__file__)) + "/Posts/"
 WIDTH = 600
 HEIGHT = 1024
-waitTime = 3 # time in seconds that an image is shown
+waitTime = 10 # time in seconds that an image is shown
 clockMode = False
 font = pygame.font.SysFont(None, 25)
 largeFont = pygame.font.SysFont(None, 100)
@@ -54,44 +54,45 @@ GPIO.add_event_detect(powerPin, GPIO.RISING)
 print(pygame.display.list_modes())
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 
-inputText = ""
-doubleInput = False
-def consumer(text):
-    global inputText
-    global doubleInput
-    if doubleInput:
-        doubleInput = False
-    else:
-        inputText = inputText + (text[-1])
-    print(text)
+# inputText = ""
+# doubleInput = False
+# def consumer(text):
+#     global inputText
+#     global doubleInput
+#     if doubleInput:
+#         doubleInput = False
+#     else:
+#         inputText = inputText + (text[-1])
+#         doubleInput = True
+#     print(text)
 
-keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
-keyboard = VKeyboard(screen, consumer, keyLayout)
+# keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
+# keyboard = VKeyboard(screen, consumer, keyLayout)
 
-enterButton = Button(
-    screen, 200, 300, 200, 150, text='Enter',
-    fontSize=50, margin=20,
-    inactiveColour=(255, 0, 0),
-    pressedColour=(0, 255, 0), radius=20,
-    onClick=lambda: globals().update(enterpress=True)
-)
+# enterButton = Button(
+#     screen, 200, 300, 200, 150, text='Enter',
+#     fontSize=50, margin=20,
+#     inactiveColour=(255, 0, 0),
+#     pressedColour=(0, 255, 0), radius=20,
+#     onClick=lambda: globals().update(enterpress=True)
+# )
 
-def setDefaultInfo():
-    global username
-    username = "iotScrapeTest@gmail.com"
-    global password
-    password = "sadsadsad"
-    global setupActive 
-    setupActive = False
-    keyboard.disable()
+# def setDefaultInfo():
+#     global username
+#     username = "iotScrapeTest@gmail.com"
+#     global password
+#     password = "sadsadsad"
+#     global setupActive 
+#     setupActive = False
+#     keyboard.disable()
 
-skipButton = Button(
-    screen, 200, 550, 150, 150, text='Skip',
-    fontSize=50, margin=20,
-    inactiveColour=(255, 150, 150),
-    pressedColour=(0, 255, 0), radius=20,
-    onClick=setDefaultInfo
-)
+# skipButton = Button(
+#     screen, 200, 550, 150, 150, text='Skip',
+#     fontSize=50, margin=20,
+#     inactiveColour=(255, 150, 150),
+#     pressedColour=(0, 255, 0), radius=20,
+#     onClick=setDefaultInfo
+# )
 
 url =  "http://10.30.40.122:5000" #needs to be the servers IP
 
@@ -182,40 +183,40 @@ print("Starting loop")
 current_image_iteration = 0
 
 # Setup screen loop
-inputPhase = "Username"
-while setupActive:
-    events = pygame.event.get()
-    for event in events:
-        if event.type == pygame.QUIT:
-            print("Attempting exit")
-            running = False
-            pygame.quit()
-            sys.exit()
-        keyboard.on_event(event)
+# inputPhase = "Username"
+# while setupActive:
+#     events = pygame.event.get()
+#     for event in events:
+#         if event.type == pygame.QUIT:
+#             print("Attempting exit")
+#             running = False
+#             pygame.quit()
+#             sys.exit()
+#         keyboard.on_event(event)
 
     
-    screen.fill((0,0,0))
-    enterButton.listen(events)
-    enterButton.draw()
-    skipButton.listen(events)
-    skipButton.draw()
-    renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
+#     screen.fill((0,0,0))
+#     enterButton.listen(events)
+#     enterButton.draw()
+#     skipButton.listen(events)
+#     skipButton.draw()
+#     renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
 
-    keyboard.draw(screen)
-    if enterPress & (inputPhase == "Username"):
-        enterPress = False
-        inputPhase = "Password"
-        username = inputText
-        keyboard.set_text = ""
-    elif enterPress:
-        enterPress = False
-        setupActive = False
-        password = inputText
-        keyboard.disable()
+#     keyboard.draw(screen)
+#     if enterPress & (inputPhase == "Username"):
+#         enterPress = False
+#         inputPhase = "Password"
+#         username = inputText
+#         keyboard.set_text = ""
+#     elif enterPress:
+#         enterPress = False
+#         setupActive = False
+#         password = inputText
+#         keyboard.disable()
     
-    pygame.display.flip()
+#     pygame.display.flip()
 
-send_user_info(url, username, password)
+# send_user_info(url, username, password)
 
 # Main display loop
 while running:
