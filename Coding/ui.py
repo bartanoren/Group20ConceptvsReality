@@ -171,6 +171,7 @@ while setupActive:
             sys.exit()
         keyboard.on_event(event)
     
+    screen.fill((0,0,0))
     enterButton.listen(events)
     enterButton.draw()
     renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
