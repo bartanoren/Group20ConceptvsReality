@@ -81,6 +81,9 @@ def setDefaultInfo():
     username = "iotScrapeTest@gmail.com"
     global password
     password = "sadsadsad"
+    global setupActive 
+    setupActive = False
+    keyboard.disable()
 
 skipButton = Button(
     screen, 200, 550, 150, 150, text='Skip',
