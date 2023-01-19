@@ -91,6 +91,7 @@ images = []
 for filename in filenames:
     if filename.endswith(".jpg"):
         images.append(filename)
+random.shuffle(images)
 
 # Text writing prep
 def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
@@ -252,6 +253,6 @@ while running:
             sys.exit()
 
         if clockMode:
-            show_text(time.strftime("%H:%M:%S"), 380, 100)
+            show_text(time.strftime("%H:%M:%S"), 270, 100)
         time.sleep(0.5)
         timer += 0.5
