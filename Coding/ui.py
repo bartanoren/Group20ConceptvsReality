@@ -218,13 +218,27 @@ while running:
             # Add current picture to a separate "liked" folder
             # Send liked image's text to server
             # Include the liked folder in image sources
-            timenow = str(math.floor(time.time()))
-            shutil.copy(folderpath + images[current_image_iteration], folderpath + "like" + timenow + ".jpg")
-            try:
-                shutil.copy(folderpath + images[current_image_iteration][:-4] + ".txt", folderpath + "like" + timenow + ".txt")
-            except FileNotFoundError:
-                print("Text file for liked picture not found")
-            print("Picture liked")
+            if not images[current_image_iteration].__contains__("like"):
+                timenow = str(math.floor(time.time()))
+                shutil.copy(folderpath + images[current_image_iteration], folderpath + "like" + timenow + ".jpg")
+                try:
+                    txtPath = folderpath + images[current_image_iteration][:-4] + ".txt"
+                    shutil.copy(txtPath, folderpath + "like" + timenow + ".txt")
+                    send_like(url, txtPath)
+                except FileNotFoundError:
+                    print("Text file for liked picture not found")
+                show_text("Liked", 10, 10)
+                print("Picture liked")
+            else:
+                # Remove the liked instance of this picture
+                print("Unliking picture")
+                os.remove(folderpath + images[current_image_iteration])
+                try:
+                    os.remove(folderpath + images[current_image_iteration][:-4] + "txt")
+                except:
+                    print("No txt file to delete for unliking")
+                show_text("Unliked", 280, 400)
+                
         elif GPIO.event_detected(modePin):
             # Do the mode thing: speed change or text/no text
             clockMode = not clockMode
