@@ -52,7 +52,7 @@ GPIO.add_event_detect(modePin, GPIO.RISING)
 GPIO.add_event_detect(powerPin, GPIO.RISING)
 
 print(pygame.display.list_modes())
-screen = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN)
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 
 inputText = ""
 def consumer(text):
