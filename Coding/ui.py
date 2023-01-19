@@ -1,5 +1,6 @@
 import pygame
 from pygame_vkeyboard import *
+import pygame_widgets as pw
 import os
 import sys
 import time
@@ -11,14 +12,16 @@ import requests
 from io import BytesIO
 import zipfile
 
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 from pygame.locals import *
 
 
 pygame.init()
 clock = pygame.time.Clock()
-# GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BOARD)
 running = True
+setupActive = True
+enterPress = False
 
 # Config constants
 folderpath = os.path.dirname(os.path.realpath(__file__)) + "/Posts/"
@@ -36,26 +39,36 @@ modePin = 12
 powerPin = 5 # Special pin that can start Pi from halted state
 
 # Connect grounded pins to pull up resistor keeps them HIGH until pressed
-# GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.setup(powerPin, GPIO.IN) # No pullup assignment necessary since apparently there is a physical pull up resistor
+GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(powerPin, GPIO.IN) # No pullup assignment necessary since apparently there is a physical pull up resistor
 # Button presses will be detected in the background:
-# GPIO.add_event_detect(prevPin, GPIO.RISING)
-# GPIO.add_event_detect(nextPin, GPIO.RISING)
-# GPIO.add_event_detect(likePin, GPIO.RISING)
-# GPIO.add_event_detect(modePin, GPIO.RISING)
-# GPIO.add_event_detect(powerPin, GPIO.RISING)
+GPIO.add_event_detect(prevPin, GPIO.RISING)
+GPIO.add_event_detect(nextPin, GPIO.RISING)
+GPIO.add_event_detect(likePin, GPIO.RISING)
+GPIO.add_event_detect(modePin, GPIO.RISING)
+GPIO.add_event_detect(powerPin, GPIO.RISING)
 
 print(pygame.display.list_modes())
 screen = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN)
 
+inputText = ""
 def consumer(text):
+    inputText = text
     print(text)
 
 keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
 keyboard = VKeyboard(screen, consumer, keyLayout)
+
+enterButton = pw.Button(
+    screen, 100, 100, 300, 150, text='enter',
+    fontSize=50, margin=20,
+    inactiveColour=(255, 0, 0),
+    pressedColour=(0, 255, 0), radius=20,
+    onClick=lambda: enterPress
+)
 
 url =  "http://131.155.184.82:5000" #needs to be the servers IP
 
@@ -89,7 +102,7 @@ def get_posts(url):
     with zipfile.ZipFile(zip_file) as archive:
         archive.extractall(extract_path)
 
-# get_posts(url)
+get_posts(url)
 
 # Write initial folder state
 filenames = os.listdir(folderpath)
@@ -146,19 +159,32 @@ print("Starting loop")
 current_image_iteration = 0
 
 # Setup screen loop
-while True:
+inputPhase = "Username"
+while setupActive:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             print("Attempting exit")
             running = False
             pygame.quit()
             sys.exit()
+        keyboard.on_event(event)
     
-    events = pygame.event.get()
-    keyboard.update(events)
-    keyboard.draw(screen)
+    renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
 
+    keyboard.draw(screen)
+    if enterPress & inputPhase.equals("Username"):
+        enterPress = False
+        inputPhase = "Password"
+        username = inputText
+        keyboard.set_text = ""
+    elif enterPress:
+        enterPress = False
+        setupActive = False
+        password = inputText
+        keyboard.disable()
     pygame.display.flip()
+
+send_user_info(url, username, password)
 
 # Main display loop
 while running:
@@ -248,6 +274,7 @@ while running:
                 except FileNotFoundError:
                     print("Text file for liked picture not found")
                 show_large_text("Liked", 10, 10)
+                pygame.display.flip()
                 print("Picture liked")
             else:
                 # Remove the liked instance of this picture
@@ -258,6 +285,7 @@ while running:
                 except:
                     print("No txt file to delete for unliking")
                 show_large_text("Unliked", 280, 400)
+                pygame.display.flip()
                 
         elif GPIO.event_detected(modePin):
             # Do the mode thing: speed change or text/no text
