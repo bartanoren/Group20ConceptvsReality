@@ -5,7 +5,6 @@ import time
 import math
 import random
 import io
-
 import shutil
 import requests
 from io import BytesIO
@@ -16,6 +15,7 @@ from pygame.locals import *
 
 
 pygame.init()
+clock = pygame.time.Clock()
 GPIO.setmode(GPIO.BOARD)
 running = True
 
@@ -26,6 +26,7 @@ HEIGHT = 1024
 waitTime = 3 # time in seconds that an image is shown
 clockMode = False
 font = pygame.font.SysFont(None, 25)
+largeFont = pygame.font.SysFont(None, 100)
 defaultColour = (255,255,255)
 prevPin = 15
 nextPin = 29
@@ -94,9 +95,9 @@ for filename in filenames:
 random.shuffle(images)
 
 # Text writing prep
-def show_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
+def show_large_text( msg, x=WIDTH//2, y=HEIGHT//2, color=defaultColour ):
     global screen
-    text = font.render( msg, True, color, (0, 0, 0))
+    text = largeFont.render( msg, True, color, (0, 0, 0))
     screen.blit(text, ( x, y ) )
 
 def renderTextCenteredAt(text, font, colour, y, x=WIDTH/2, screen=screen, allowed_width=WIDTH-20):
@@ -133,6 +134,8 @@ def renderTextCenteredAt(text, font, colour, y, x=WIDTH/2, screen=screen, allowe
 
         font_surface = font.render(line, True, colour, (0,0,0))
         screen.blit(font_surface, (tx, ty))
+
+        y_offset += fh
 print("Starting loop")
 
 current_image_iteration = 0
@@ -186,7 +189,7 @@ while running:
         screen.blit(img, (0, ypos))
     
     renderTextCenteredAt(txt, font, defaultColour, 900)
-    show_text(txt, 35, 900)
+    show_large_text(txt, 35, 900)
     pygame.display.flip()
     
     timer = 0
@@ -228,7 +231,7 @@ while running:
                     send_like(url, txtPath)
                 except FileNotFoundError:
                     print("Text file for liked picture not found")
-                show_text("Liked", 10, 10)
+                show_large_text("Liked", 10, 10)
                 print("Picture liked")
             else:
                 # Remove the liked instance of this picture
@@ -238,7 +241,7 @@ while running:
                     os.remove(folderpath + images[current_image_iteration][:-4] + "txt")
                 except:
                     print("No txt file to delete for unliking")
-                show_text("Unliked", 280, 400)
+                show_large_text("Unliked", 280, 400)
                 
         elif GPIO.event_detected(modePin):
             # Do the mode thing: speed change or text/no text
@@ -253,6 +256,7 @@ while running:
             sys.exit()
 
         if clockMode:
-            show_text(time.strftime("%H:%M:%S"), 270, 100)
-        time.sleep(0.5)
+            show_large_text(time.strftime("%H:%M:%S"), 270, 100)
+            pygame.display.flip()
+        clock.tick(2) # Number means loop iterations per second
         timer += 0.5
