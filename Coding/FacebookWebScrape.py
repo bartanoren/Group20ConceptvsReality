@@ -15,6 +15,8 @@ import datetime
 import traceback
 import logging
 import unicodedata
+import threading
+import subprocess
 
 
 import urllib.request
@@ -62,7 +64,8 @@ def main():
     global __user_name
     global __password
 
-    username_input = driver.find_element(By.NAME, "username")
+    username_input = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+    EC.presence_of_element_located((By.NAME, "username")))
     username_input.clear()
     username_input.send_keys(__user_name)\
 
@@ -192,7 +195,7 @@ def get_post_description(driver, url, image_name):
     driver.get(url)
 
     try:
-        description_span = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+        description_span = WebDriverWait(driver, 3).until(
             EC.presence_of_element_located((By.XPATH,
             "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div[1]/div[1]/article/div/div[2]/div/div[2]/div[1]/ul/div/li/div/div/div[2]/div[1]/span")))
         description = description_span.text
@@ -221,14 +224,17 @@ def download_image(url, image_name):
 def like_post(driver, url):
     driver.get(url)
 
+    try:
     #get the picture on link
-    picture_div = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
-        EC.presence_of_element_located(
-        (By.XPATH, "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div[1]/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button/div[2]/span")))
-    
-    time.sleep(1)
+        picture_div = WebDriverWait(driver, 3).until(
+            EC.presence_of_element_located(
+            (By.XPATH, "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div[1]/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button/div[2]/span")))
 
-    picture_div.click()
+        time.sleep(1)
+
+        picture_div.click()
+    except Exception:
+        printdev("Liking exception, possibly already liked")
 
 #printing function which disables with development mode bool
 def printdev(tuple):
@@ -250,9 +256,18 @@ while __user_name is None:
     #check every 2 seconds
     time.sleep(2)
 
+def run_server():
+    subprocess.run(["python", directory+"/SocialFrameServer.py"])
+
+#start the server in a new thread
+thread = threading.Thread(target=run_server)
+thread.start()
+time.sleep(2)
+
 #start the main loop
 while True:
     #scraping
+    printdev(("Starting Scraping process"))
     main()
 
     #after scraping
@@ -261,9 +276,10 @@ while True:
 
     #start the off scraping loop
     while True:
-        #TODO: check the pictures that need to be liked and like them
-
+        #Check the pictures that need to be liked and like them
+        printdev(("Checking for like process"))
         if os.listdir(directory + "/likes"):
+            printdev(("Found Like file"))
             for item in os.listdir(directory + "/likes"):                
                 if item.endswith(".txt"):
                     file_path = os.path.join(directory + "/likes/", item )
@@ -274,11 +290,16 @@ while True:
                     #delete file after like
                     os.remove(file_path)
 
+        printdev(("Sleeping for 5 sec"))
+        time.sleep(5)
+
         end = time.perf_counter()
         if end - start > time_limit:
             printdev(("time limit has exceeded, starting scraping"))
             break
 
     #delete all cookies so scraping can start with logging in
+    printdev(("deleting cookies"))
     driver.delete_all_cookies()
+    
     
