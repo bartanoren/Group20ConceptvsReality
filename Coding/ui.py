@@ -39,7 +39,7 @@ GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(powerPin, GPIO.IN,) # No pullup assignment necessary since apparently there is a physical pull up resistor
+GPIO.setup(powerPin, GPIO.IN) # No pullup assignment necessary since apparently there is a physical pull up resistor
 # Button presses will be detected in the background:
 GPIO.add_event_detect(prevPin, GPIO.RISING)
 GPIO.add_event_detect(nextPin, GPIO.RISING)
@@ -189,7 +189,6 @@ while running:
         screen.blit(img, (0, ypos))
     
     renderTextCenteredAt(txt, font, defaultColour, 900)
-    show_large_text(txt, 35, 900)
     pygame.display.flip()
     
     timer = 0
@@ -245,6 +244,9 @@ while running:
                 
         elif GPIO.event_detected(modePin):
             # Do the mode thing: speed change or text/no text
+            if clockMode:
+                timer = waitTime #End timer so image is drawn again
+                current_image_iteration -= 1 #Prevent it from choosing the next image
             clockMode = not clockMode
             print("Changing mode")
         elif GPIO.event_detected(powerPin):
@@ -256,7 +258,7 @@ while running:
             sys.exit()
 
         if clockMode:
-            show_large_text(time.strftime("%H:%M:%S"), 270, 100)
+            show_large_text(time.strftime("%H:%M:%S"), 160, 100)
             pygame.display.flip()
         clock.tick(2) # Number means loop iterations per second
         timer += 0.5
