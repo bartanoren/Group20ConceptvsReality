@@ -1,4 +1,5 @@
 import pygame
+from pygame_vkeyboard import *
 import os
 import sys
 import time
@@ -10,13 +11,13 @@ import requests
 from io import BytesIO
 import zipfile
 
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 from pygame.locals import *
 
 
 pygame.init()
 clock = pygame.time.Clock()
-GPIO.setmode(GPIO.BOARD)
+# GPIO.setmode(GPIO.BOARD)
 running = True
 
 # Config constants
@@ -35,20 +36,26 @@ modePin = 12
 powerPin = 5 # Special pin that can start Pi from halted state
 
 # Connect grounded pins to pull up resistor keeps them HIGH until pressed
-GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(powerPin, GPIO.IN) # No pullup assignment necessary since apparently there is a physical pull up resistor
+# GPIO.setup(prevPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(nextPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(likePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(modePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(powerPin, GPIO.IN) # No pullup assignment necessary since apparently there is a physical pull up resistor
 # Button presses will be detected in the background:
-GPIO.add_event_detect(prevPin, GPIO.RISING)
-GPIO.add_event_detect(nextPin, GPIO.RISING)
-GPIO.add_event_detect(likePin, GPIO.RISING)
-GPIO.add_event_detect(modePin, GPIO.RISING)
-GPIO.add_event_detect(powerPin, GPIO.RISING)
+# GPIO.add_event_detect(prevPin, GPIO.RISING)
+# GPIO.add_event_detect(nextPin, GPIO.RISING)
+# GPIO.add_event_detect(likePin, GPIO.RISING)
+# GPIO.add_event_detect(modePin, GPIO.RISING)
+# GPIO.add_event_detect(powerPin, GPIO.RISING)
 
 print(pygame.display.list_modes())
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN)
+
+def consumer(text):
+    print(text)
+
+keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
+keyboard = VKeyboard(screen, consumer, keyLayout)
 
 url =  "http://131.155.184.82:5000" #needs to be the servers IP
 
@@ -71,8 +78,6 @@ def send_user_info(url, username, password):
     response = requests.post(upload_url, files={'file': file})
 
     print(response.text)
-
-    
 
 def get_posts(url):
     # Get the zip file from the server
@@ -140,6 +145,21 @@ print("Starting loop")
 
 current_image_iteration = 0
 
+# Setup screen loop
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            print("Attempting exit")
+            running = False
+            pygame.quit()
+            sys.exit()
+    
+    events = pygame.event.get()
+    keyboard.update(events)
+    keyboard.draw(screen)
+
+    pygame.display.flip()
+
 # Main display loop
 while running:
     for event in pygame.event.get():
@@ -169,9 +189,6 @@ while running:
     except:
         print("Loading text file failed")
         txt = ""
-    current_image_iteration += 1
-    if current_image_iteration == len(images):
-        current_image_iteration = 0
 
     screen.fill((0,0,0)) # Clear background
     # Scale and write pictures to screen
@@ -262,3 +279,7 @@ while running:
             pygame.display.flip()
         clock.tick(2) # Number means loop iterations per second
         timer += 0.5
+        
+    current_image_iteration += 1
+    if current_image_iteration == len(images):
+        current_image_iteration = 0
