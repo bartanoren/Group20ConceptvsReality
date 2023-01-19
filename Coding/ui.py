@@ -1,6 +1,6 @@
 import pygame
 from pygame_vkeyboard import *
-import pygame_widgets as pw
+from pygame_widgets.button import Button
 import os
 import sys
 import time
@@ -62,7 +62,7 @@ def consumer(text):
 keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
 keyboard = VKeyboard(screen, consumer, keyLayout)
 
-enterButton = pw.Button(
+enterButton = Button(
     screen, 100, 100, 300, 150, text='enter',
     fontSize=50, margin=20,
     inactiveColour=(255, 0, 0),
