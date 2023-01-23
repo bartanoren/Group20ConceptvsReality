@@ -124,7 +124,7 @@ def get_posts(url):
     with zipfile.ZipFile(zip_file) as archive:
         archive.extractall(extract_path)
 
-# get_posts(url)
+get_posts(url)
 
 # Write initial folder state
 filenames = os.listdir(folderpath)
@@ -224,7 +224,7 @@ while setupActive:
     pygame.display.flip()
     clock.tick(15)
 
-# send_user_info(url, username, password)
+send_user_info(url, username, password)
 
 # Main display loop
 while running:
@@ -341,7 +341,7 @@ while running:
             print("Attempting system shutdown")
             running = False
             timer = waitTime
-#             os.system("shutdown -h now")
+            os.system("shutdown -h now")
             pygame.quit()
             sys.exit()
 
