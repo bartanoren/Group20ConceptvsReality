@@ -17,6 +17,7 @@ from pygame.locals import *
 
 pygame.init()
 clock = pygame.time.Clock()
+pygame.mouse.set_visible(False)
 GPIO.setmode(GPIO.BOARD)
 running = True
 setupActive = True
@@ -54,15 +55,8 @@ print(pygame.display.list_modes())
 screen = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN)
 
 inputText = ""
-doubleInput = False
 def consumer(text):
     global inputText
-    global doubleInput
-    # if doubleInput:
-    #     doubleInput = False
-    # else:
-    #     inputText = inputText + (text[-1])
-    #     doubleInput = True
     inputText = text
     pygame.draw.rect(screen, (0,0,0), (0, 250, 600, 25))
     renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
@@ -198,11 +192,13 @@ while setupActive:
             running = False
             pygame.quit()
             sys.exit()
-        keyboard.on_event(event) # Update keyboard
+        # Touchscreen was giving double input because there is a mouse click and a finger tap event at the same time
+        if event != pygame.FINGERDOWN:
+            keyboard.on_event(event) # Update keyboard
 
     # Update button and keyboard state
     button("Enter", 250, 350, 100, 75, (175, 100, 30), (250, 190, 110), "enter")
-    button("Skip", 250, 450, 100, 75, (200, 0, 0), (180, 180, 180), "skip")
+    button("Skip", 250, 450, 100, 75, (200, 0, 0), (180, 180, 180), "skip") # Comment this line to remove the skip
 
     keyboard.draw(screen)
 
@@ -275,6 +271,9 @@ while running:
         ypos = round(HEIGHT/2 - imgHeight/2)
         screen.blit(img, (0, ypos))
     
+    if images[current_image_iteration].__contains__("like"):
+        show_large_text("Liked", 10, 10)
+
     renderTextCenteredAt(txt, font, defaultColour, 900)
     pygame.display.flip()
     
@@ -332,7 +331,7 @@ while running:
                 pygame.display.flip()
                 
         elif GPIO.event_detected(modePin):
-            # Do the mode thing: speed change or text/no text
+            # Toggle clock mode
             if clockMode:
                 timer = waitTime #End timer so image is drawn again
                 current_image_iteration -= 1 #Prevent it from choosing the next image
