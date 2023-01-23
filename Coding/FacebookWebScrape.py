@@ -42,7 +42,7 @@ chrome_options.add_experimental_option("detach", True)
 # chrome_options.add_argument("--headless")
 
 driver = webdriver.Chrome(ChromeDriverManager().install() ,options=chrome_options)#service=Service(driverPath)), options = options)
-    
+
 
 def main():
     
@@ -77,11 +77,13 @@ def main():
     submit_button.click()
 
     #Reject saving info for safety purposes
-    not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "//button[text()='Not Now']")))
-    not_now_btn.click()
-
+    try:
+        not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[text()='Not Now']")))
+        not_now_btn.click()
+    except Exception:
+        printdev(('1st popup exception'))
     #Reject saving info for safety purposes
     try:
         not_now_btn = WebDriverWait(driver, EXPLICIT_WAIT_TIME).until(
@@ -271,7 +273,7 @@ while True:
     main()
 
     #after scraping
-    time_limit = 300 #repeat scraping every X seconds
+    time_limit = 3000 #repeat scraping every X seconds
     start = time.perf_counter()
 
     #start the off scraping loop
