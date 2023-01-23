@@ -1,6 +1,5 @@
 import pygame
 from pygame_vkeyboard import *
-from pygame_widgets.button import Button
 import os
 import sys
 import time
@@ -52,47 +51,52 @@ GPIO.add_event_detect(modePin, GPIO.RISING)
 GPIO.add_event_detect(powerPin, GPIO.RISING)
 
 print(pygame.display.list_modes())
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN)
 
-# inputText = ""
-# doubleInput = False
-# def consumer(text):
-#     global inputText
-#     global doubleInput
-#     if doubleInput:
-#         doubleInput = False
-#     else:
-#         inputText = inputText + (text[-1])
-#         doubleInput = True
-#     print(text)
+inputText = ""
+doubleInput = False
+def consumer(text):
+    global inputText
+    global doubleInput
+    # if doubleInput:
+    #     doubleInput = False
+    # else:
+    #     inputText = inputText + (text[-1])
+    #     doubleInput = True
+    inputText = text
+    pygame.draw.rect(screen, (0,0,0), (0, 250, 600, 25))
+    renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
+    print(text)
 
-# keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
-# keyboard = VKeyboard(screen, consumer, keyLayout)
+keyLayout = VKeyboardLayout(VKeyboardLayout.QWERTY)
+keyboard = VKeyboard(screen, consumer, keyLayout, False)
 
-# enterButton = Button(
-#     screen, 200, 300, 200, 150, text='Enter',
-#     fontSize=50, margin=20,
-#     inactiveColour=(255, 0, 0),
-#     pressedColour=(0, 255, 0), radius=20,
-#     onClick=lambda: globals().update(enterpress=True)
-# )
+# Define a button by placement etc. Multiple actions can be added to this function
+def button (msg, x, y, w, h, ic, ac, action=None ):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
 
-# def setDefaultInfo():
-#     global username
-#     username = "iotScrapeTest@gmail.com"
-#     global password
-#     password = "sadsadsad"
-#     global setupActive 
-#     setupActive = False
-#     keyboard.disable()
+    if (x+w > mouse[0] > x) and (y+h > mouse[1] > y):
+        pygame.draw.rect(screen, ac, (x, y, w, h))
+        if (click[0] == 1 and action != None):
+            if action == "enter":
+                global enterPress
+                enterPress = True
+            elif action == "skip":
+                global username
+                username = "iotScrapeTest@gmail.com"
+                global password
+                password = "sadsadsad"
+                global setupActive
+                setupActive = False
+                keyboard.disable()
 
-# skipButton = Button(
-#     screen, 200, 550, 150, 150, text='Skip',
-#     fontSize=50, margin=20,
-#     inactiveColour=(255, 150, 150),
-#     pressedColour=(0, 255, 0), radius=20,
-#     onClick=setDefaultInfo
-# )
+    else:
+        pygame.draw.rect(screen, ic, (x, y, w, h))
+        smallText = pygame.font.Font(None, 20)
+        textSurf = smallText.render(msg, True, defaultColour)
+        buttonCoordinate = ( (x+(w/2)-textSurf.get_width()/2), (y+(h/2)-textSurf.get_height()/2) )
+        screen.blit(textSurf, buttonCoordinate)
 
 url =  "http://10.30.40.122:5000" #needs to be the servers IP
 
@@ -126,7 +130,7 @@ def get_posts(url):
     with zipfile.ZipFile(zip_file) as archive:
         archive.extractall(extract_path)
 
-get_posts(url)
+# get_posts(url)
 
 # Write initial folder state
 filenames = os.listdir(folderpath)
@@ -183,38 +187,46 @@ print("Starting loop")
 current_image_iteration = 0
 
 # Setup screen loop
-# inputPhase = "Username"
-# while setupActive:
-#     events = pygame.event.get()
-#     for event in events:
-#         if event.type == pygame.QUIT:
-#             print("Attempting exit")
-#             running = False
-#             pygame.quit()
-#             sys.exit()
-#         keyboard.on_event(event)
+inputPhase = "Username"
+renderTextCenteredAt("Use the touchscreen to input your Instagram login information", font, defaultColour, 185)
+renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
+while setupActive:
+    events = pygame.event.get()
+    for event in events:
+        if event.type == pygame.QUIT:
+            print("Attempting exit")
+            running = False
+            pygame.quit()
+            sys.exit()
+        keyboard.on_event(event) # Update keyboard
 
-    
-#     screen.fill((0,0,0))
-#     enterButton.listen(events)
-#     enterButton.draw()
-#     skipButton.listen(events)
-#     skipButton.draw()
-#     renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
+    # Update button and keyboard state
+    button("Enter", 250, 350, 100, 75, (175, 100, 30), (250, 190, 110), "enter")
+    button("Skip", 250, 450, 100, 75, (200, 0, 0), (180, 180, 180), "skip")
 
-#     keyboard.draw(screen)
-#     if enterPress & (inputPhase == "Username"):
-#         enterPress = False
-#         inputPhase = "Password"
-#         username = inputText
-#         keyboard.set_text = ""
-#     elif enterPress:
-#         enterPress = False
-#         setupActive = False
-#         password = inputText
-#         keyboard.disable()
-    
-#     pygame.display.flip()
+    keyboard.draw(screen)
+
+    if enterPress & (inputPhase == "Username"):
+        inputPhase = "Saving username"
+        username = inputText   
+        keyboard.set_text("")
+        pygame.draw.rect(screen, (0,0,0), (0, 250, 600, 25))
+        renderTextCenteredAt(inputPhase + ": " + inputText, font, defaultColour, 250)
+    elif (inputPhase == "Saving username") & (pygame.mouse.get_pressed()[0] == 0):
+        # Only transfer to the next step when button is not being pressed
+        inputPhase = "Password"
+        keyboard.set_text("")
+        enterPress = False
+        pygame.draw.rect(screen, (0,0,0), (0, 250, 600, 25))
+        renderTextCenteredAt(inputPhase + ": ", font, defaultColour, 250)
+    elif (inputPhase == "Password") & enterPress:
+        enterPress = False
+        setupActive = False
+        password = inputText
+        keyboard.disable()
+
+    pygame.display.flip()
+    clock.tick(15)
 
 # send_user_info(url, username, password)
 
